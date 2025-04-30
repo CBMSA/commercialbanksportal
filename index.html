@@ -1,22 +1,112 @@
-Frontend HTML
+// == Frontend: commercialbanksportal (HTML + CSS + JS) ==
+// index.html
 
-<!-- public/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Digital Zar Wallet</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CBDC Bank Portal</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Welcome to Digital Zar Wallet</h1>
-    <div id="wallet">
-        <p>Balance: <span id="balance">0</span> e₹</p>
-        <input type="text" id="recipient" placeholder="Recipient Address">
-        <input type="number" id="amount" placeholder="Amount">
-        <button onclick="send()">Send</button>
+  <div class="container">
+    <h1>Commercial Bank CBDC Portal</h1>
+    <button onclick="connectWallet()">Connect Wallet</button>
+
+    <div class="wallet-actions">
+      <input type="text" id="recipient" placeholder="Recipient Address">
+      <input type="number" id="amount" placeholder="Amount">
+      <button onclick="transferCBDC()">Transfer</button>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/web3/dist/web3.min.js"></script>
-    <script src="app.js"></script>
+
+    <div class="issue-section">
+      <input type="text" id="issueTo" placeholder="Issue To Address">
+      <input type="number" id="issueAmount" placeholder="Issue Amount">
+      <button onclick="issueCBDC()">Issue CBDC</button>
+    </div>
+
+    <p id="walletAddress"></p>
+    <p id="status"></p>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.6.1/dist/web3.min.js"></script>
+  <script src="main.js"></script>
 </body>
 </html>
+
+// style.css
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f3f3f3;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+.container {
+  background: #fff;
+  padding: 2rem;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
+button {
+  background-color: #0057b7;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  margin-top: 0.5rem;
+  border-radius: 5px;
+  cursor: pointer;
+}
+input {
+  display: block;
+  margin: 0.5rem 0;
+  padding: 0.5rem;
+  width: 100%;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+// main.js
+let web3;
+let contract;
+const contractAddress = "YOUR_CONTRACT_ADDRESS";
+const abi = [/* Paste the smart contract ABI here */];
+
+async function connectWallet() {
+  if (window.ethereum) {
+    web3 = new Web3(window.ethereum);
+    await ethereum.request({ method: 'eth_requestAccounts' });
+    const accounts = await web3.eth.getAccounts();
+    document.getElementById("walletAddress").textContent = `Wallet: ${accounts[0]}`;
+    contract = new web3.eth.Contract(abi, contractAddress);
+  } else {
+    alert("Please install MetaMask!");
+  }
+}
+
+async function transferCBDC() {
+  const accounts = await web3.eth.getAccounts();
+  const to = document.getElementById("recipient").value;
+  const amount = document.getElementById("amount").value;
+
+  contract.methods.transferCBDC(to, web3.utils.toWei(amount, "ether"))
+    .send({ from: accounts[0] })
+    .on('receipt', (receipt) => {
+      document.getElementById("status").textContent = "Transfer complete!";
+    });
+}
+
+async function issueCBDC() {
+  const accounts = await web3.eth.getAccounts();
+  const to = document.getElementById("issueTo").value;
+  const amount = document.getElementById("issueAmount").value;
+
+  contract.methods.issueCBDC(to, web3.utils.toWei(amount, "ether"))
+    .send({ from: accounts[0] })
+    .on('receipt', (receipt) => {
+      document.getElementById("status").textContent = "CBDC issued successfully!";
+    });
+}
