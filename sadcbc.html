@@ -1,0 +1,43 @@
+<!-- frontend/index.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SADC BC Platform</title>
+</head>
+<body>
+  <h1>Trade SADC BC</h1>
+  <form id="tradeForm">
+    <input type="text" id="buyer" placeholder="Buyer Address" />
+    <input type="text" id="seller" placeholder="Seller Address" />
+    <input type="number" id="amount" placeholder="Amount" />
+    <input type="number" id="price" placeholder="Price" />
+    <select id="currency">
+      <option value="USD">USD</option>
+      <option value="ZAR">ZAR</option>
+      <option value="BWP">BWP</option>
+    </select>
+    <button type="submit">Trade</button>
+  </form>
+
+  <script>
+    document.getElementById('tradeForm').onsubmit = async function (e) {
+      e.preventDefault();
+      const payload = {
+        buyer: document.getElementById('buyer').value,
+        seller: document.getElementById('seller').value,
+        amount: parseFloat(document.getElementById('amount').value),
+        price: parseFloat(document.getElementById('price').value),
+        currency: document.getElementById('currency').value
+      };
+
+      const response = await fetch('http://localhost:3000/api/trade', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const result = await response.json();
+      alert(result.message);
+    }
+  </script>
+</body>
+</html>
