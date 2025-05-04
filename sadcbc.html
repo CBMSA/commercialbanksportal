@@ -1,112 +1,84 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Commercial Bank CBDC Portal</title>
+  <title>SADC Trading Platform</title>
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>
   <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #f4f7fa;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-
-    .portal-container {
-      background: white;
-      padding: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      max-width: 400px;
-      width: 100%;
-    }
-
-    h1 {
-      text-align: center;
-      color: #003366;
-    }
-
-    input, button {
-      width: 100%;
-      padding: 0.75rem;
-      margin-top: 10px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      font-size: 1rem;
-    }
-
-    button {
-      background-color: #0057b7;
-      color: white;
-      border: none;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    button:hover {
-      background-color: #00409c;
-    }
-
-    .section {
-      margin-top: 20px;
-    }
-
-    #status, #walletAddress {
-      margin-top: 15px;
-      font-size: 0.9rem;
-      color: green;
-      word-break: break-word;
-    }
+    body { font-family: Arial; padding: 20px; background: #f5f5f5; }
+    .card { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);}
+    .price { font-size: 20px; margin-bottom: 10px; }
+    button { padding: 10px 20px; }
   </style>
 </head>
 <body>
-  <div class="portal-container">
-    <h1>CBDC Bank Portal</h1>
-  <nav>
-    <a href="index.html">CBDC Portal</a> |
-    <a href="#wallet">
-    <a href="home.html">Home</a> |
-    <a href="sadcbc.html">Trading Wallet</a>
-  </nav>rm</title>
-</head>
-<body>
-  <h1>Trade SADC BC</h1>
-  <form id="tradeForm">
-    <input type="text" id="buyer" placeholder="Buyer Address" />
-    <input type="text" id="seller" placeholder="Seller Address" />
-    <input type="number" id="amount" placeholder="Amount" />
-    <input type="number" id="price" placeholder="Price" />
-    <select id="currency">
-      <option value="USD">USD</option>
-      <option value="ZAR">ZAR</option>
-      <option value="BWP">BWP</option>
+  <h2>SADC DApp Trading Platform</h2>
+
+  <div class="card">
+    <h3>Live Prices</h3>
+    <div class="price" id="btc">BTC: Loading...</div>
+    <div class="price" id="eth">ETH: Loading...</div>
+    <div class="price" id="sadc">SADC BC: 1.00 ZAR (static)</div>
+  </div>
+
+  <div class="card">
+    <h3>Wallet</h3>
+    <button onclick="connectWallet()">Connect MetaMask</button>
+    <p id="walletAddress">Not connected</p>
+  </div>
+
+  <div class="card">
+    <h3>Buy/Sell</h3>
+    <select id="token">
+      <option value="BTC">BTC</option>
+      <option value="ETH">ETH</option>
+      <option value="SADC">SADC BC</option>
     </select>
-    <button type="submit">Trade</button>
-  </form>
+    <input type="number" id="amount" placeholder="Amount">
+    <button onclick="buyToken()">Buy</button>
+    <button onclick="sellToken()">Sell</button>
+    <p id="actionStatus"></p>
+  </div>
 
   <script>
-    document.getElementById('tradeForm').onsubmit = async function (e) {
-      e.preventDefault();
-      const payload = {
-        buyer: document.getElementById('buyer').value,
-        seller: document.getElementById('seller').value,
-        amount: parseFloat(document.getElementById('amount').value),
-        price: parseFloat(document.getElementById('price').value),
-        currency: document.getElementById('currency').value
-      };
-
-      const response = await fetch('http://localhost:3000/api/trade', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const result = await response.json();
-      alert(result.message);
+    async function connectWallet() {
+      if (window.ethereum) {
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        document.getElementById("walletAddress").innerText = "Connected: " + accounts[0];
+      } else {
+        alert("MetaMask not detected!");
+      }
     }
+
+    async function fetchPrices() {
+      try {
+        const res = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=zar");
+        const data = await res.json();
+        document.getElementById("btc").innerText = `BTC: ZAR ${data.bitcoin.zar}`;
+        document.getElementById("eth").innerText = `ETH: ZAR ${data.ethereum.zar}`;
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function buyToken() {
+      const token = document.getElementById("token").value;
+      const amount = document.getElementById("amount").value;
+      document.getElementById("actionStatus").innerText = `Buy order placed: ${amount} ${token}`;
+      // Add blockchain buy logic here
+    }
+
+    function sellToken() {
+      const token = document.getElementById("token").value;
+      const amount = document.getElementById("amount").value;
+      document.getElementById("actionStatus").innerText = `Sell order placed: ${amount} ${token}`;
+      // Add blockchain sell logic here
+    }
+
+    fetchPrices();
+    setInterval(fetchPrices, 10000); // update every 10s
   </script>
 </body>
 </html>
