@@ -1,26 +1,11 @@
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SADC Trading Platform</title>
-  <script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>
-  <style>
-    body { font-family: Arial; padding: 20px; background: #f5f5f5; }
-    .card { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);}
-    .price { font-size: 20px; margin-bottom: 10px; }
-    button { padding: 10px 20px; }
-  </style>
-</head>
-<body>
-  <h2>SADC DApp Trading Platform</h2>
-
   <div class="card">
     <h3>Live Prices</h3>
     <div class="price" id="btc">BTC: Loading...</div>
     <div class="price" id="eth">ETH: Loading...</div>
-    <div class="price" id="sadc">SADC BC: 1.00 ZAR (static)</div>
+    <div class="price" id="sadc">SADC BC: Loading...</div>
+    <div id="retail">(Retail Rate: 1 SADC BC = 1.00 ZAR)</div>
+    <div id="wholesale" style="display:none;">(Wholesale Rate: 1 SADC BC = <span id="goldZAR"></span> ZAR)</div>
   </div>
 
   <div class="card">
@@ -43,12 +28,46 @@
   </div>
 
   <script>
+    let web3;
+    let contract;
+    const CONTRACT_ADDRESS = "YOUR_CONTRACT_ADDRESS";
+    const CONTRACT_ABI = [ /* paste your ABI here */ ];
+
     async function connectWallet() {
       if (window.ethereum) {
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        web3 = new Web3(window.ethereum);
+        await window.ethereum.request({ method: 'eth_requestAccounts' });
+        const accounts = await web3.eth.getAccounts();
         document.getElementById("walletAddress").innerText = "Connected: " + accounts[0];
+        contract = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS);
+        fetchUserTier(accounts[0]);
       } else {
         alert("MetaMask not detected!");
+      }
+    }
+
+    async function fetchUserTier(account) {
+      try {
+        const tier = await contract.methods.userTier(account).call();
+        if (tier === "1") {
+          // Wholesale
+          document.getElementById("wholesale").style.display = "block";
+          fetchGoldPrice();
+        }
+      } catch (error) {
+        console.error("Tier fetch error:", error);
+      }
+    }
+
+    async function fetchGoldPrice() {
+      try {
+        // Example ZAR/oz price - in production, use your backend/oracle service
+        const goldPriceZAR = 40000;
+        const value = goldPriceZAR / 10;
+        document.getElementById("goldZAR").innerText = value.toFixed(2);
+        document.getElementById("sadc").innerText = `SADC BC: ${value.toFixed(2)} ZAR (wholesale)`;
+      } catch (error) {
+        console.error("Gold price error:", error);
       }
     }
 
@@ -67,18 +86,18 @@
       const token = document.getElementById("token").value;
       const amount = document.getElementById("amount").value;
       document.getElementById("actionStatus").innerText = `Buy order placed: ${amount} ${token}`;
-      // Add blockchain buy logic here
+      // TODO: call smart contract buy logic
     }
 
     function sellToken() {
       const token = document.getElementById("token").value;
       const amount = document.getElementById("amount").value;
       document.getElementById("actionStatus").innerText = `Sell order placed: ${amount} ${token}`;
-      // Add blockchain sell logic here
+      // TODO: call smart contract sell logic
     }
 
     fetchPrices();
-    setInterval(fetchPrices, 10000); // update every 10s
+    setInterval(fetchPrices, 10000);
   </script>
 </body>
-</html>
+</html
