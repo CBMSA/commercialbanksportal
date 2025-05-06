@@ -1,8 +1,9 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Offline QR Payment Scanner</title>
   <script src="https://unpkg.com/html5-qrcode@2.3.9/minified/html5-qrcode.min.js"></script>
   <style>
@@ -16,13 +17,14 @@
       min-height: 100vh;
     }
     .container {
-      max-width: 600px;
+      max-width: 90%;
+      width: 600px;
       margin: auto;
-      padding: 40px;
+      padding: 20px;
       background-color: white;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       border-radius: 8px;
-      margin-top: 60px;
+      margin-top: 30px;
       flex-grow: 1;
     }
     h2 {
@@ -40,6 +42,15 @@
       margin-top: 20px;
       color: #2f7a4c;
       font-weight: 600;
+      word-wrap: break-word;
+    }
+    .error {
+      background-color: #ffe5e5;
+      padding: 15px;
+      border-radius: 6px;
+      color: #b00020;
+      font-weight: bold;
+      margin-top: 10px;
     }
     footer {
       text-align: center;
@@ -55,6 +66,7 @@
     <h2>Offline QR Payment Scanner</h2>
     <div id="reader"></div>
     <div id="result" class="result" style="display:none;"></div>
+    <div id="camera-error" class="error" style="display:none;">Camera could not be accessed. Please allow permissions or use a supported browser.</div>
   </div>
 
   <footer>
@@ -63,6 +75,7 @@
 
   <script>
     const resultDiv = document.getElementById('result');
+    const errorDiv = document.getElementById('camera-error');
 
     function showResult(decodedText) {
       try {
@@ -79,18 +92,27 @@
       }
     }
 
-    new Html5Qrcode("reader").start(
-      { facingMode: "environment" },
-      {
-        fps: 10,
-        qrbox: 250
-      },
-      showResult,
-      errorMessage => {
-        console.warn(errorMessage);
+    Html5Qrcode.getCameras().then(devices => {
+      if (devices && devices.length) {
+        const cameraId = devices[0].id;
+        const html5QrCode = new Html5Qrcode("reader");
+        html5QrCode.start(
+          cameraId,
+          { fps: 10, qrbox: { width: 250, height: 250 } },
+          showResult,
+          errorMessage => console.warn("QR scan error:", errorMessage)
+        ).catch(err => {
+          errorDiv.style.display = 'block';
+          console.error("Camera start error:", err);
+        });
+      } else {
+        errorDiv.style.display = 'block';
+        errorDiv.innerText = "No camera found on this device.";
       }
-    );
+    }).catch(err => {
+      errorDiv.style.display = 'block';
+      console.error("Camera access error:", err);
+    });
   </script>
 </body>
 </html>
-
