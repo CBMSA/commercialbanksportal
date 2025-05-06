@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Offline QR Payment Scanner</title>
+  <script src="https://unpkg.com/html5-qrcode@2.3.9/minified/html5-qrcode.min.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f0f2f5;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      padding: 40px;
+      background-color: white;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      margin-top: 60px;
+      flex-grow: 1;
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+    #reader {
+      width: 100%;
+      margin: 20px 0;
+    }
+    .result {
+      background-color: #e0f7e9;
+      padding: 20px;
+      border-radius: 6px;
+      margin-top: 20px;
+      color: #2f7a4c;
+      font-weight: 600;
+    }
+    footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 0.85em;
+      background-color: #e9ecef;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Offline QR Payment Scanner</h2>
+    <div id="reader"></div>
+    <div id="result" class="result" style="display:none;"></div>
+  </div>
+
+  <footer>
+    &copy; 2025 SADC CBDC Platform. All rights reserved. Licensed under MIT License.
+  </footer>
+
+  <script>
+    const resultDiv = document.getElementById('result');
+
+    function showResult(decodedText) {
+      try {
+        const data = JSON.parse(decodedText);
+        resultDiv.style.display = 'block';
+        resultDiv.innerHTML = `
+          <strong>Recipient:</strong> ${data.recipient}<br>
+          <strong>Amount:</strong> ${data.amount} CBDC<br>
+          <strong>Note:</strong> ${data.note}<br>
+          <strong>Timestamp:</strong> ${new Date(data.timestamp).toLocaleString()}
+        `;
+      } catch (err) {
+        resultDiv.innerHTML = 'Invalid QR code data.';
+      }
+    }
+
+    new Html5Qrcode("reader").start(
+      { facingMode: "environment" },
+      {
+        fps: 10,
+        qrbox: 250
+      },
+      showResult,
+      errorMessage => {
+        console.warn(errorMessage);
+      }
+    );
+  </script>
+</body>
+</html>
+
